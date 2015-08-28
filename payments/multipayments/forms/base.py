@@ -12,7 +12,7 @@ from mezzanine.conf import settings
 class CallbackUUIDOrderForm(shopforms.OrderForm):
 
     callback_uuid = forms.CharField(max_length=36, min_length=36,
-                                    widget=forms.HiddenInput(), initial=uuid4)
+                                    widget=forms.HiddenInput())
 
     def __init__(self, request, step, *args, **kwargs):
         # Set the callback_uuid to something new
@@ -20,15 +20,15 @@ class CallbackUUIDOrderForm(shopforms.OrderForm):
         is_first_step = step == checkout.CHECKOUT_STEP_FIRST
         if is_first_step and 'callback_uuid' not in initial:
             while True:
-                callback_uuid = uuid4()
-                count = shop.Order.objects.filter(callback_uuid=callback_uuid) \
-                    .count()
-                if not count:
+                callback_uuid = str(uuid4())
+                exists = shop.Order.objects.filter(callback_uuid=callback_uuid) \
+                    .exists()
+                if not exists:
                     break
             initial['callback_uuid'] = callback_uuid
         elif 'callback_uuid' not in initial:
             while True:
-                callback_uuid = uuid4()
+                callback_uuid = str(uuid4())
                 exists = shop.Order.objects.filter(callback_uuid=callback_uuid) \
                     .exists()
                 if not exists:
@@ -69,7 +69,7 @@ class ExternalPaymentForm(forms.Form):
         '''
         if func:
             protocol = 'https' if settings.PAYPAL_RETURN_WITH_HTTPS else 'http'
-            domain = sites.Site.objects.get_current().domain
+            domain = settings.SITE_DOMAIN
             base_url = '%s://%s' % (protocol, domain)
             view, args, kwargs = func(cart, uuid, order_form)
             return base_url + reverse(view, args=args, kwargs=kwargs)

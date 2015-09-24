@@ -69,7 +69,7 @@ class ExternalPaymentForm(forms.Form):
         '''
         if func:
             protocol = 'https' if settings.PAYPAL_RETURN_WITH_HTTPS else 'http'
-            domain = settings.SITE_DOMAIN
+            domain = sites.Site.objects.get_current().domain
             base_url = '%s://%s' % (protocol, domain)
             view, args, kwargs = func(cart, uuid, order_form)
             return base_url + reverse(view, args=args, kwargs=kwargs)
